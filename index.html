@@ -34,6 +34,21 @@
       padding: 15px;
       border-radius: 10px;
       margin-top: 15px;
+      overflow-wrap: break-word;
+      word-wrap: break-word;
+    }
+
+    .prompt-text {
+      white-space: pre-wrap;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .reason-text {
+      margin-top: 10px;
+      font-size: 13px;
+      color: #94a3b8;
+      line-height: 1.6;
     }
   </style>
 </head>
@@ -90,20 +105,28 @@ async function optimize() {
     html += `
       <div class="box">
         <h3>${v.style}</h3>
-        <pre>${v.prompt}</pre>
+        <div class="prompt-text">${v.prompt}</div>
         <p>Score: clarity ${v.score.clarity}, specificity ${v.score.specificity}, effectiveness ${v.score.effectiveness}</p>
       </div>
     `;
   });
 
 
-  const best = data.versions.find(v => v.style === data.best_version);
+  let bestPrompt = data.best_version;
+
+
+  if (data.versions && typeof data.best_version === "string") {
+    const found = data.versions.find(v => v.style === data.best_version);
+    if (found) {
+      bestPrompt = found.prompt;
+    }
+  }
 
  html += `
   <div class="box">
     <h3>Best Version (${data.best_version})</h3>
-    <pre>${best ? best.prompt : "Not found"}</pre>
-    <p>${data.reason}</p>
+    <div class="prompt-text">${bestPrompt || "Not found"}</div>
+    <div class="reason-text">${data.reason}</div>
   </div>
  `;
 
