@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Prompt Optimizer</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #0f172a;
+      color: white;
+      max-width: 800px;
+      margin: 40px auto;
+    }
+
+    textarea {
+      width: 100%;
+      height: 120px;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      margin-bottom: 10px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background: #22c55e;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      color: white;
+    }
+
+    .box {
+      background: #1e293b;
+      padding: 15px;
+      border-radius: 10px;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>Prompt Optimizer Agent</h1>
+
+<input id="apikey" placeholder="Enter your OpenAI API key" style="width:100%; margin-bottom:10px; padding:10px; border-radius:8px; border:none;" />
+<textarea id="input" placeholder="Enter your prompt..."></textarea>
+<button onclick="optimize()">Optimize</button>
+
+<div id="result"></div>
+
+<script>
+async function optimize() {
+  const prompt = document.getElementById("input").value;
+
+  const apiKey = document.getElementById("apikey").value;
+
+  if (!apiKey || !apiKey.startsWith("sk-")) {
+    document.getElementById("result").innerHTML = `
+      <div class="box">
+        <h3>Error</h3>
+        <pre>Please enter a valid OpenAI API key</pre>
+      </div>
+    `;
+    return;
+  }
+
+  const res = await fetch("http://45.76.217.135:3001/optimize", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ prompt, apiKey })
+  });
+
+  const data = await res.json();
+
+
+  if (data.error) {
+    document.getElementById("result").innerHTML = `
+      <div class="box">
+        <h3>Error</h3>
+        <pre>${data.error}</pre>
+        <pre>${JSON.stringify(data.details, null, 2)}</pre>
+      </div>
+    `;
+    return;
+  }
+
+  let html = "";
+
+  data.versions.forEach(v => {
+    html += `
+      <div class="box">
+        <h3>${v.style}</h3>
+        <pre>${v.prompt}</pre>
+        <p>Score: clarity ${v.score.clarity}, specificity ${v.score.specificity}, effectiveness ${v.score.effectiveness}</p>
+      </div>
+    `;
+  });
+
+
+  const best = data.versions.find(v => v.style === data.best_version);
+
+ html += `
+  <div class="box">
+    <h3>Best Version (${data.best_version})</h3>
+    <pre>${best ? best.prompt : "Not found"}</pre>
+    <p>${data.reason}</p>
+  </div>
+ `;
+
+  document.getElementById("result").innerHTML = html;
+}
+</script>
+
+</body>
+</html>
